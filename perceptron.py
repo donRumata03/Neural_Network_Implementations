@@ -65,7 +65,7 @@ def print_weights_gradient(g : list):
 
 
 class perceptron:
-    w : list = []
+    w : Union[list, np.array] = []
     input_size : int
     geometry: tuple
     def __init__(self, input_size : int, geometry : tuple, w : list = None, debug = False):
@@ -79,6 +79,8 @@ class perceptron:
             for layer_index in range(len(self.geometry) - 1):
                 self.add_w((self.geometry[layer_index], self.geometry[layer_index + 1]))
             self.add_w((self.geometry[-1], 1))
+
+        self.w = np.array(self.w)
 
         if debug:
             print("___________________________")
@@ -154,7 +156,6 @@ class perceptron:
         dJ_dz = dJ_da * known_sigmoid_derivative(predict)
 
         last_gradient = np.array([ais[-2][0][i] * dJ_dz for i in range(len(ais[-2][0]))])
-        # print("Analytical last gradient:", last_gradient)
         res.append(np.array([last_gradient]).T)
 
         dJ_das = np.array([self.w[-1][i][0] * dJ_dz for i in range(self.geometry[-1])])
@@ -199,6 +200,25 @@ class perceptron:
         return self.count_back_propagational_gradient(x, y)
         # return self.count_experimental_gradient(x, y)
 
+    def SGD_fit(self, xs, ys, learning_rate : float, batch_size : int, epochs : int):
+        losses = []
+        for epoch in range(epochs):
+            print(f"\n__________________________\nEpoch: {epoch} ; Loss: {losses[-1] if losses else 'Unknown'}...")
+            this_loss_sum = 0
+            batch_count = 0
+            batch_gradient : np.array = np.array([np.zeros(i.shape, dtype = np.float64) for i in self.w])
+            for sample_index, sample in enumerate(xs):
+                batch_count += 1
+                this_err, this_gradient = self.count_gradient(sample, ys[sample_index])
+                batch_gradient += np.array(this_gradient)
+                if batch_count == batch_size:
+                    self.w -= batch_gradient * learning_rate
+                    batch_count = 0
+                    batch_gradient.fill(0)
+                this_loss_sum += this_err
+            losses.append(this_loss_sum / len(xs))
+        return losses
+
     def GD_fit(self, xs, ys, epochs : int, learning_rate : float):
         losses = []
         for epoch in range(epochs):
@@ -207,8 +227,10 @@ class perceptron:
             for sample_index, sample in enumerate(xs):
                 this_err, this_gradient = self.count_gradient(sample, ys[sample_index])
 
-                for layer_index in range(len(self.w)):
-                    self.w[layer_index] -= this_gradient[layer_index] * learning_rate
+                self.w -= np.array(this_gradient) * learning_rate
+
+                # for layer_index in range(len(self.w)):
+                #    self.w[layer_index] -= this_gradient[layer_index] * learning_rate
 
                 this_loss_sum += this_err
             losses.append(this_loss_sum / len(xs))
@@ -288,24 +310,8 @@ class perceptron:
 # Different tests:
 
 def test_matrix():
-    test_x = np.array([1, 1, 2])
-    print(test_x.shape)
-    x = test_x.reshape((1, 3))
-    print(x.shape, x)
-    w = np.array([
-        [1, 3],
-        [4, 2],
-        [9, 3]
-    ])
-    other_w = np.ones(w.shape)
-    print(w)
-    print("_______")
-    print(other_w)
-    print("_______")
-    print(w + other_w)
-    print("___")
-    print(w.shape)
-    print(np.dot(x, w))
+    test_arr = np.array([np.array([1, 3]), np.array([2, 3]), np.array([1]), np.array([4, 5, 6])])
+    print(test_arr + test_arr * 0.01)
 
 
 def test_gen():
@@ -358,13 +364,13 @@ def show_model_prediction_map(model : perceptron, number : int):
 def test_nn():
     p = perceptron(2, (80, 40, 20), debug=True)
     losses = []
-    for i in range(20):
+    for i in range(40):
         print("\n\n____________________________\nReal epoch:", i)
         training_data = make_training_data(1000)
-        losses.append(p.GD_fit([np.array((i[1], i[2])) for i in training_data], [i[0] for i in training_data], 1, 0.1)[0])
+        losses.append(p.SGD_fit([np.array((i[1], i[2])) for i in training_data], [i[0] for i in training_data], 0.01, 10, 1)[0])
         print("Real loss:", losses[-1])
-        show_model_prediction_map(model=p, number=10000)
 
+    show_model_prediction_map(model=p, number=10000)
     print("Losses:", np.array(losses))
 
     plt.plot(list(range(len(losses))), losses)

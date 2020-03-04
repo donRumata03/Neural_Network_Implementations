@@ -2,6 +2,12 @@
   <dictionary name="Vova">
     <words>
       <w>coeffs</w>
+      <w>conv</w>
+      <w>convolutional</w>
+      <w>convolving</w>
+      <w>dataset</w>
+      <w>datasets</w>
+      <w>mnist</w>
       <w>parabaloid</w>
       <w>perceptron</w>
       <w>polynom</w>
