@@ -3,68 +3,10 @@ from matplotlib import pyplot as plt
 import numpy as np
 from typing import *
 
+from circle_test_generator import *
+from NN_basic_functions import *
 
-# For generation:
-def rand(x0, distribution):
-    return x0 - distribution / 2 + random.random() * (distribution - x0)
-
-def generate_points_circle(center_x : float, center_y : float, radius : float, sample_number : int, inside : bool = True, pole_w = None, pole_h = None):
-    res = []
-    for i in range(sample_number):
-        this_x = center_x
-        this_y = center_y
-        while (this_x == center_x and this_y == center_y) or (((this_x - center_x) ** 2 + (this_y - center_y) ** 2 > radius ** 2) == inside):
-            this_x = center_x - radius + 2 * radius * random.random() if pole_w is None else rand(center_x, pole_w)
-            this_y = center_y - radius + 2 * radius * random.random() if pole_h is None else rand(center_y, pole_h)
-            if not inside and random.random() < 0.0001:
-                pass
-                # print(len(res))
-                pass # print(this_x, this_y)
-        res.append((this_x, this_y))
-
-    return res
-
-
-def generate_test_points(center_x : float, center_y : float, radius1 : float, radius2 : float, sample_number : int, frame_w = None, frame_h = None) -> tuple:
-    blues = generate_points_circle(center_x, center_y, radius1, sample_number, True)
-    reds = generate_points_circle(center_x, center_y, radius2, sample_number, False, frame_w, frame_h)
-    return blues, reds
-
-def make_training_data(number : int = 1000):
-    blues, reds = generate_test_points(0, 0, 0.6, 0.7, number, 2, 2)
-    arr = [(1, i[0], i[1]) for i in blues] + [(0, i[0], i[1]) for i in reds]
-    random.shuffle(arr)
-    return arr
-
-# For NN:
-
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
-
-def sigmoid_derivative(x):
-    return sigmoid(x) * (1 - sigmoid(x))
-
-def known_sigmoid_derivative(s_val):
-    return s_val * (1 - s_val)
-
-
-def print_activation(activation):
-    print("\n______________________________")
-    print(f"Activation (number of steps : {len(activation)}):")
-    for i in range(len(activation)):
-        print(str(i) + "th step:")
-        print(activation[i][0])
-    print("_______________________________")
-
-
-def print_weights_gradient(g : list):
-    print("\n______________________________\nWeights gradient:")
-    for index, this_g in enumerate(g):
-        print(f"Layer {index} gradient:")
-        print(this_g)
-
-
-class perceptron:
+class primitive_perceptron:
     w : Union[list, np.array] = []
     input_size : int
     geometry: tuple
@@ -305,86 +247,4 @@ class perceptron:
         if store_loss:
             return losses
 
-
-
-# Different tests:
-
-def test_matrix():
-    test_arr = np.array([np.array([1, 3]), np.array([2, 3]), np.array([1]), np.array([4, 5, 6])])
-    print(test_arr + test_arr * 0.01)
-
-
-def test_gen():
-    _blues, _reds = generate_test_points(0, 0, 0.6, 0.7, 10000, 2, 2)
-    plt.scatter(*zip(*_blues))
-    plt.scatter(*zip(*_reds))
-    plt.show()
-
-    r = [rand(0, 1) for _ in range(100)]
-    print(len([i for i in r if i > 0]), len([i for i in r if i < 0]))
-
-
-def test_grad_counting():
-    data = make_training_data()
-    this_perceptron = perceptron(2, (3, 2, 4), debug=False)
-
-    random_sample = data[0]
-    print("Chosen sample:", random_sample)
-    err, experimental_grad = this_perceptron.count_experimental_gradient(np.array(random_sample[1:]), random_sample[0])
-    print_weights_gradient(experimental_grad)
-    err, anal_grad = this_perceptron.count_back_propagational_gradient(np.array(random_sample[1:]), random_sample[0])
-    print_weights_gradient(anal_grad)
-
-
-def show_model_prediction_map(model : perceptron, number : int):
-    blues, reds = generate_test_points(0, 0, 0.645, 0.655, number, 2, 2)
-    points = list(blues) + list(reds)
-    model_blues = []
-    model_reds = []
-    for p in points:
-        res = model.predict(np.array(p))
-        if res:
-            model_blues.append(p)
-        else:
-            model_reds.append(p)
-
-
-    blue_xs = np.array(model_blues).T[0] if model_blues else []
-    blue_ys = np.array(model_blues).T[1] if model_blues else []
-
-    red_xs = np.array(model_reds).T[0] if model_reds else []
-    red_ys = np.array(model_reds).T[1] if model_reds else []
-
-    plt.scatter(blue_xs, blue_ys, color="blue")
-    plt.scatter(red_xs, red_ys, color="red")
-
-    plt.show()
-
-
-def test_nn():
-    p = perceptron(2, (80, 40, 20), debug=True)
-    losses = []
-    for i in range(40):
-        print("\n\n____________________________\nReal epoch:", i)
-        training_data = make_training_data(1000)
-        losses.append(p.SGD_fit([np.array((i[1], i[2])) for i in training_data], [i[0] for i in training_data], 0.01, 10, 1)[0])
-        print("Real loss:", losses[-1])
-
-    show_model_prediction_map(model=p, number=10000)
-    print("Losses:", np.array(losses))
-
-    plt.plot(list(range(len(losses))), losses)
-    plt.show()
-
-
-    """
-    print(np.array(p.predict(np.array([0.1, -0.5]), True, True)))
-
-    print(
-        np.array(p.train([np.array((i[1], i[2])) for i in training_data], [i[0] for i in training_data], 10, 1, True)))
-    """
-
-
-if __name__ == '__main__':
-    test_nn()
 

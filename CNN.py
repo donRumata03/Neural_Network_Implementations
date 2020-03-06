@@ -1,4 +1,4 @@
-from perceptron import *
+from primitive_perceptron import *
 from scipy.ndimage import convolve
 
 def edge_detect_convolve_test():
