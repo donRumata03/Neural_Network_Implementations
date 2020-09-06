@@ -1,0 +1,5 @@
+__pycache__/
+venv/
+mnist_png/
+mnist-csv/
+.idea/
