@@ -2,7 +2,7 @@
 
 This repository contains my own implementations of basic machine learning algorithms.
  Here are some of them:
- 
+
 ### 1) Polynomial Regression
 To watch polynomial regression\`s work you only need to run file 
     `polynomial_regression.py`
@@ -10,11 +10,7 @@ There are some points randomly generated around a curve of any pow polynom.
 After that the algorithm starts its work and approximates that points by required function.
 To do that gradient descent and newton method are used.
 
-<<<<<<< HEAD
-##2) Perceptron
-=======
 ### 2) Perceptron
->>>>>>> a9dffb2dee03cbec2ec76677499fefc18c3d8313
 To watch perceptron\`s work you only need to run file
     ``perceptron_test.py``
 There\`s a class of perceptron of custom layer geometry 
