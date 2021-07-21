@@ -1,0 +1,4 @@
+__pycache__/
+mnist_png/
+mnist_csv/
+venv/

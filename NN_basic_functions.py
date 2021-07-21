@@ -97,7 +97,7 @@ class ReLU(Activation_function):
 
     @staticmethod
     def compute(value : Scary_val, alpha : float = 0.075) -> Scary_val:
-        return np.maximum(value * -alpha, value)
+        return np.maximum(value * alpha, value)
 
     @staticmethod
     def derivative(value : Scary_val,
@@ -143,7 +143,8 @@ class SoftMax(Loss_function):
 
     @staticmethod
     def derivative(output: Scary_val, answer : Scary_val, function_value : Scary_val) -> Scary_val:
-        return 2 * (output - answer) / len(output)
+        s = function_value.reshape(-1, 1)
+        return np.diagflat(s) - np.dot(s, s.T)
 
 
 
@@ -151,6 +152,8 @@ class SoftMax(Loss_function):
 if __name__ == '__main__':
     example_output = np.array([1., 2, 3, 4, 0.1, 10])
     example_answer = np.array([1., 3, 5, 7, 100])
+
+    print(ReLU.compute(example_output))
 
     print()
 
